@@ -33,18 +33,28 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public Cliente atualizar(@PathVariable Long id, @RequestBody Cliente dados) {
+    public Cliente atualizar(
+            @PathVariable Long id,
+            @RequestBody Cliente dados) {
+
         Cliente cliente = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
         cliente.setNome(dados.getNome());
         cliente.setEmail(dados.getEmail());
         cliente.setTelefone(dados.getTelefone());
         cliente.setCidade(dados.getCidade());
+
         return repository.save(cliente);
     }
 
     @DeleteMapping("/{id}")
     public void remover(@PathVariable Long id) {
+
+        if (!repository.existsById(id)) {
+            throw new RuntimeException("Cliente não encontrado");
+        }
+
         repository.deleteById(id);
     }
 }
