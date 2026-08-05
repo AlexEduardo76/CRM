@@ -1,32 +1,251 @@
-* { box-sizing: border-box; }
-body {
-  font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
-  background: #F4F5F7;
-  color: #172B4D;
-  margin: 0;
+/* =========================================================
+   BOTÕES
+   ========================================================= */
+
+button,
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.1s ease;
 }
-header { background: #6554C0; color: #fff; padding: 1.5rem 2rem; }
-header h1 { margin: 0 0 .3rem; }
-header p { margin: 0; opacity: .85; }
-main { max-width: 950px; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
-.form-section, .table-section {
-  background: #fff; border: 1px solid #DFE1E6; border-radius: 8px;
-  padding: 1.2rem 1.4rem; margin-bottom: 1.5rem;
+
+/* Botões dentro da área de ações do formulário */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-form { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+.form-actions button {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 7px;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Botão principal */
+.form-actions button[type="submit"] {
+  background: #0052cc;
+  color: #ffffff;
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background: #0747a6;
+}
+
+.form-actions button[type="submit"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Botão secundário */
+button.secondary {
+  border: 0;
+  border-radius: 7px;
+  background: #ebecf0;
+  color: #172b4d;
+  min-height: 36px;
+  padding: 8px 12px;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+button.secondary:hover:not(:disabled) {
+  background: #dfe1e6;
+}
+
+button.secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   BOTÕES DA TABELA
+   ========================================================= */
+
+.action {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 6px;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Botão Editar */
+.action.edit {
+  background: #e9f2ff;
+  color: #0052cc;
+}
+
+.action.edit:hover:not(:disabled) {
+  background: #deebff;
+}
+
+/* Compatibilidade com a classe antiga */
+.action.editar {
+  background: #e9f2ff;
+  color: #0052cc;
+}
+
+.action.editar:hover:not(:disabled) {
+  background: #deebff;
+}
+
+/* Botão Excluir */
+.action.delete {
+  background: #ffebe6;
+  color: #bf2600;
+}
+
+.action.delete:hover:not(:disabled) {
+  background: #ffddd5;
+}
+
+/* Compatibilidade com a classe antiga */
+.action.excluir {
+  background: #ffebe6;
+  color: #bf2600;
+}
+
+.action.excluir:hover:not(:disabled) {
+  background: #ffddd5;
+}
+
+/* =========================================================
+   ÁREA DOS BOTÕES DA TABELA
+   ========================================================= */
+
+td:last-child {
+  white-space: nowrap;
+}
+
+td:last-child .action {
+  margin-right: 6px;
+}
+
+td:last-child .action:last-child {
+  margin-right: 0;
+}
+
+/* =========================================================
+   PESQUISA
+   ========================================================= */
+
+.search {
+  width: 240px;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid #dfe1e6;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #172b4d;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search:focus {
+  border-color: #4c9aff;
+  box-shadow: 0 0 0 2px rgba(76, 154, 255, 0.2);
+}
+
+.search::placeholder {
+  color: #7a869a;
+}
+
+/* =========================================================
+   ÍCONES SVG DOS BOTÕES
+   ========================================================= */
+
+button svg,
+.action svg {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* =========================================================
+   FORMULÁRIO
+   ========================================================= */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 form input {
-  flex: 1; min-width: 140px; padding: .55rem .7rem;
-  border: 1px solid #DFE1E6; border-radius: 5px; font-size: .9rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #dfe1e6;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
 }
-form button {
-  background: #6554C0; color: #fff; border: none; padding: .6rem 1.2rem;
-  border-radius: 5px; cursor: pointer; font-weight: 600;
+
+form input:focus {
+  border-color: #4c9aff;
+  box-shadow: 0 0 0 2px rgba(76, 154, 255, 0.2);
 }
-form button[type="button"] { background: #DFE1E6; color: #172B4D; }
-.erro { color: #DE350B; font-size: .82rem; margin: .6rem 0 0; }
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid #EEE; font-size: .87rem; }
-th { color: #5E6C84; text-transform: uppercase; font-size: .7rem; letter-spacing: .04em; }
-button.action { border: none; background: none; cursor: pointer; font-size: .85rem; margin-right: .5rem; }
-button.editar { color: #3B5BDB; }
-button.excluir { color: #DE350B; }
+
+/* =========================================================
+   MENSAGENS DE ERRO
+   ========================================================= */
+
+.erro {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  background: #ffebe6;
+  color: #bf2600;
+  font-size: 14px;
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .search {
+    width: 100%;
+  }
+
+  .action {
+    margin-bottom: 5px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
