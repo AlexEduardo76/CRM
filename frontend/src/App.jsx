@@ -1,137 +1,350 @@
 import { useEffect, useState } from 'react';
-import { listarClientes, criarCliente, atualizarCliente, excluirCliente } from './api.js';
+import {
+  listarClientes,
+  criarCliente,
+  atualizarCliente,
+  excluirCliente
+} from './api.js';
 
-const EMAIL_REGEX = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const FORM_VAZIO = {
+  nome: '',
+  email: '',
+  telefone: '',
+  cidade: ''
+};
 
 function formatarTelefone(telefone) {
-  // Assume sempre 11 dígitos "puros" (DDD + 9 dígitos)
-  return '(' + telefone.substring(0, 2) + ') ' + telefone.substring(2, 7) + '-' + telefone.substring(7, 11);
-}
+  if (!telefone) {
+    return '';
+  }
 
-const FORM_VAZIO = { nome: '', email: '', telefone: '', cidade: '' };
+  const numeros = String(telefone).replace(/\D/g, '');
+
+  if (numeros.length === 11) {
+    return `(${numeros.substring(0, 2)}) ${numeros.substring(2, 7)}-${numeros.substring(7, 11)}`;
+  }
+
+  if (numeros.length === 10) {
+    return `(${numeros.substring(0, 2)}) ${numeros.substring(2, 6)}-${numeros.substring(6, 10)}`;
+  }
+
+  return telefone;
+}
 
 export default function App() {
   const [clientes, setClientes] = useState([]);
   const [form, setForm] = useState(FORM_VAZIO);
   const [editingId, setEditingId] = useState(null);
   const [emailErro, setEmailErro] = useState('');
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
 
   async function carregar() {
-    const dados = await listarClientes();
-    setClientes(dados);
+    try {
+      setErro('');
+      setCarregando(true);
+
+      const dados = await listarClientes();
+
+      setClientes(Array.isArray(dados) ? dados : []);
+    } catch (error) {
+      console.error('Erro ao carregar clientes:', error);
+      setErro('Não foi possível carregar os clientes.');
+    } finally {
+      setCarregando(false);
+    }
   }
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    carregar();
+  }, []);
 
+  // CORRIGIDO:
+  // Agora o formulário recebe os dados do cliente selecionado.
   function handleEditar(cliente) {
-    // (bug: o formulário não é preenchido com os dados do cliente selecionado)
     setEditingId(cliente.id);
+
+    setForm({
+      nome: cliente.nome || '',
+      email: cliente.email || '',
+      telefone: cliente.telefone || '',
+      cidade: cliente.cidade || ''
+    });
+
+    setEmailErro('');
+    setErro('');
   }
 
   function handleCancelarEdicao() {
     setEditingId(null);
-    setForm(FORM_VAZIO);
+    setForm({ ...FORM_VAZIO });
+    setEmailErro('');
+    setErro('');
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+
+    setForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    if (name === 'email') {
+      setEmailErro('');
+    }
+
+    setErro('');
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!EMAIL_REGEX.test(form.email)) {
+    const nome = form.nome.trim();
+    const email = form.email.trim();
+    const telefone = form.telefone.trim();
+    const cidade = form.cidade.trim();
+
+    if (!nome) {
+      setErro('Informe o nome do cliente.');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
       setEmailErro('E-mail inválido.');
       return;
     }
-    setEmailErro('');
 
-    if (editingId) {
-      await atualizarCliente(editingId, form);
-    } else {
-      await criarCliente(form);
+    if (!telefone) {
+      setErro('Informe o telefone.');
+      return;
     }
 
-    setForm(FORM_VAZIO);
-    setEditingId(null);
-    carregar();
+    if (!cidade) {
+      setErro('Informe a cidade.');
+      return;
+    }
+
+    try {
+      setErro('');
+      setEmailErro('');
+
+      const dadosCliente = {
+        nome,
+        email,
+        telefone,
+        cidade
+      };
+
+      if (editingId !== null) {
+        await atualizarCliente(editingId, dadosCliente);
+      } else {
+        await criarCliente(dadosCliente);
+      }
+
+      setForm({ ...FORM_VAZIO });
+      setEditingId(null);
+
+      await carregar();
+    } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
+      setErro('Não foi possível salvar o cliente.');
+    }
   }
 
   async function handleExcluir(id) {
-    if (!confirm('Excluir este cliente?')) return;
-    await excluirCliente(id);
-    carregar();
+    const confirmar = window.confirm(
+      'Tem certeza que deseja excluir este cliente?'
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      setErro('');
+
+      await excluirCliente(id);
+
+      if (editingId === id) {
+        setEditingId(null);
+        setForm({ ...FORM_VAZIO });
+      }
+
+      await carregar();
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
+      setErro('Não foi possível excluir o cliente.');
+    }
   }
 
   return (
     <div className="app">
+
       <header>
-        <h1>👥 Cadastro de Clientes</h1>
+        <h1>Cadastro de Clientes</h1>
         <p>CRM simples para gestão de contatos</p>
       </header>
 
       <main>
+
         <section className="form-section">
-          <h2>{editingId ? 'Editar cliente' : 'Novo cliente'}</h2>
+
+          <h2>
+            {editingId !== null
+              ? 'Editar cliente'
+              : 'Novo cliente'}
+          </h2>
+
           <form onSubmit={handleSubmit}>
+
             <input
+              type="text"
+              name="nome"
               placeholder="Nome"
               value={form.nome}
-              onChange={e => setForm({ ...form, nome: e.target.value })}
+              onChange={handleChange}
               required
             />
+
             <input
               type="email"
+              name="email"
               placeholder="E-mail"
               value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
+              onChange={handleChange}
               required
             />
+
             <input
+              type="tel"
+              name="telefone"
               placeholder="Telefone"
               value={form.telefone}
-              onChange={e => setForm({ ...form, telefone: e.target.value })}
+              onChange={handleChange}
               required
             />
+
             <input
+              type="text"
+              name="cidade"
               placeholder="Cidade"
               value={form.cidade}
-              onChange={e => setForm({ ...form, cidade: e.target.value })}
+              onChange={handleChange}
               required
             />
-            <button type="submit">{editingId ? 'Salvar' : 'Adicionar'}</button>
-            {editingId && (
-              <button type="button" onClick={handleCancelarEdicao}>Cancelar</button>
+
+            <button type="submit">
+              {editingId !== null
+                ? 'Salvar alterações'
+                : 'Adicionar'}
+            </button>
+
+            {editingId !== null && (
+              <button
+                type="button"
+                onClick={handleCancelarEdicao}
+              >
+                Cancelar
+              </button>
             )}
+
           </form>
-          {emailErro && <p className="erro">{emailErro}</p>}
+
+          {emailErro && (
+            <p className="erro">
+              {emailErro}
+            </p>
+          )}
+
+          {erro && (
+            <p className="erro">
+              {erro}
+            </p>
+          )}
+
         </section>
 
         <section className="table-section">
+
           <h2>Clientes cadastrados</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Telefone</th>
-                <th>Cidade</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map(c => (
-                <tr key={c.id}>
-                  <td>{c.nome}</td>
-                  <td>{c.email}</td>
-                  <td>{formatarTelefone(c.telefone)}</td>
-                  <td>{c.cidade}</td>
-                  <td>
-                    <button className="action editar" onClick={() => handleEditar(c)}>Editar</button>
-                    <button className="action excluir" onClick={() => handleExcluir(c.id)}>Excluir</button>
-                  </td>
+
+          {carregando ? (
+            <p>Carregando clientes...</p>
+          ) : clientes.length === 0 ? (
+            <p>Nenhum cliente cadastrado.</p>
+          ) : (
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Telefone</th>
+                  <th>Cidade</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+
+                {clientes.map(cliente => (
+
+                  <tr key={cliente.id}>
+
+                    <td>
+                      {cliente.nome}
+                    </td>
+
+                    <td>
+                      {cliente.email}
+                    </td>
+
+                    <td>
+                      {formatarTelefone(cliente.telefone)}
+                    </td>
+
+                    <td>
+                      {cliente.cidade}
+                    </td>
+
+                    <td>
+
+                      <button
+                        type="button"
+                        className="action editar"
+                        onClick={() => handleEditar(cliente)}
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        className="action excluir"
+                        onClick={() => handleExcluir(cliente.id)}
+                      >
+                        Excluir
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          )}
+
         </section>
+
       </main>
+
     </div>
   );
 }
